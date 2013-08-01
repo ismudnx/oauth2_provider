@@ -17,7 +17,9 @@ class OauthTokenController < ApplicationController
     original_token = Oauth2::Provider::OauthToken.find_one(:refresh_token, params[:refresh_token])
     original_token.destroy unless original_token.nil?
 
-    unless ['authorization-code', 'refresh-token'].include?(params[:grant_type])
+    user = User.find_by_username params[:username]
+
+    unless ['authorization-code', 'refresh-token','password'].include?(params[:grant_type].dasherize)
       render_error('unsupported-grant-type', "Grant type #{params[:grant_type]} is not supported!")
       return
     end
@@ -33,19 +35,26 @@ class OauthTokenController < ApplicationController
       render_error('invalid-grant', 'Redirect uri mismatch!')
       return
     end
-
-    if params[:grant_type] == 'authorization-code'
+    
+    case params[:grant_type].dasherize
+    when 'authorization-code'
       if authorization.nil? || authorization.expired? || authorization.oauth_client.id != client.id
         render_error('invalid-grant', "Authorization expired or invalid!")
         return
       end
       token = authorization.generate_access_token
-    else # refresh-token
+    when 'refresh-token'
       if original_token.nil? || original_token.oauth_client.id != client.id
         render_error('invalid-grant', 'Refresh token is invalid!')
         return
       end
       token = original_token.refresh
+    when 'password'      
+      unless user && user.authenticate?(params[:password])
+        render_error('invalid-grant', 'Invalid Authentication!')
+        return
+      end
+      token = user.generate_access_token(client.id)
     end
 
     render :content_type => 'application/json', :text => token.access_token_attributes.to_json
