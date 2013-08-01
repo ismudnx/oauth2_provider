@@ -27,6 +27,8 @@ module Oauth2
     
     # use host app's custom authorization filter to protect admin actions on OauthUserTokensController
     OauthUserTokensController.before_filter(:ensure_admin_user, :only => [:revoke_by_admin])
-
+	
+	# set the User model to the constant USER_KLASS , the User model should have a property username and a method authenticate?(password) returning true/false
+	USER_KLASS = ::User
   end
 end
