@@ -17,7 +17,7 @@ class OauthTokenController < ApplicationController
     original_token = Oauth2::Provider::OauthToken.find_one(:refresh_token, params[:refresh_token])
     original_token.destroy unless original_token.nil?
 
-    user = User.find_by_username params[:username]
+    user = USER_KLASS.find_by_username params[:username]
 
     unless ['authorization-code', 'refresh-token','password'].include?(params[:grant_type].dasherize)
       render_error('unsupported-grant-type', "Grant type #{params[:grant_type]} is not supported!")

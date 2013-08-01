@@ -15,3 +15,6 @@ Dir[File.join(File.dirname(__FILE__), "..", "app", "**", '*.rb')].each do |rb_fi
   require File.expand_path(rb_file)
 end
 
+Dispatcher.to_prepare :oauth2_provider do
+  USER_KLASS.instance_eval {include Oauth2::Provider::User}
+end
